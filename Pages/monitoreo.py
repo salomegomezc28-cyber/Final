@@ -17,54 +17,84 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
-.stApp { background-color: #0f172a; color: #e2e8f0; }
+.stApp { background-color: #FFE5D9; color: #5a4a4a; }
 [data-testid="stSidebar"] {
-    background-color: #1e293b !important;
-    border-right: 1px solid #334155;
+    background-color: #D8E2DC !important;
+    border-right: 1px solid #FFCAD4;
 }
 [data-testid="stSidebar"] h2,
 [data-testid="stSidebar"] h3 {
-    color: #38bdf8 !important; font-weight: 700 !important;
+    color: #9D8189 !important; font-weight: 700 !important;
     font-size: 0.95rem !important; text-transform: uppercase !important;
 }
-h1 { color: #38bdf8 !important; font-weight: 700 !important; }
-h2, h3 { color: #7dd3fc !important; font-weight: 600 !important; }
+[data-testid="stSidebar"] label { color: #5a4a4a !important; font-size: 0.85rem !important; }
+h1 { color: #F4ACB7 !important; font-weight: 700 !important; }
+h2, h3 { color: #9D8189 !important; font-weight: 600 !important; }
 .stButton > button {
-    background: #0284c7 !important; color: #ffffff !important;
+    background: #F4ACB7 !important; color: #ffffff !important;
     border: none !important; border-radius: 8px !important;
     font-weight: 600 !important; width: 100% !important;
+    padding: 0.6rem 1.4rem !important;
+    transition: background 0.2s ease !important;
 }
-.stButton > button:hover { background: #0369a1 !important; }
+.stButton > button:hover { background: #9D8189 !important; }
 [data-testid="metric-container"] {
-    background: #1e293b; border: 1px solid #334155;
-    border-top: 3px solid #38bdf8; border-radius: 8px; padding: 18px 22px;
+    background: #FFCAD4; border: 1px solid #F4ACB7;
+    border-top: 3px solid #9D8189;
+    border-radius: 8px; padding: 18px 22px;
+}
+[data-testid="metric-container"] label {
+    color: #9D8189 !important; font-size: 0.78rem !important;
+    font-weight: 600 !important; text-transform: uppercase !important;
+}
+[data-testid="metric-container"] [data-testid="stMetricValue"] {
+    color: #5a4a4a !important; font-weight: 700 !important;
 }
 .device-card {
-    background: #1e293b; border: 1px solid #334155;
+    background: #FFCAD4; border: 1px solid #F4ACB7;
     border-radius: 12px; padding: 24px 28px; margin-bottom: 16px;
 }
 .header-card {
-    background: #1e293b; border: 1px solid #334155;
-    border-left: 5px solid #38bdf8; border-radius: 8px;
+    background: #FFCAD4; border: 1px solid #F4ACB7;
+    border-left: 5px solid #9D8189; border-radius: 8px;
     padding: 28px 36px; margin-bottom: 24px;
 }
 .status-ok {
-    background: #052e16; border: 1px solid #166534;
-    border-left: 4px solid #22c55e; border-radius: 8px;
+    background: #D8E2DC; border: 1px solid #9D8189;
+    border-left: 4px solid #9D8189; border-radius: 8px;
     padding: 12px 18px; margin: 8px 0;
-    font-size: 0.88rem; color: #86efac; font-weight: 500;
+    font-size: 0.88rem; color: #5a4a4a; font-weight: 500;
 }
 .status-err {
-    background: #1c0a00; border: 1px solid #9a3412;
-    border-left: 4px solid #f97316; border-radius: 8px;
+    background: #FFCAD4; border: 1px solid #F4ACB7;
+    border-left: 4px solid #F4ACB7; border-radius: 8px;
     padding: 12px 18px; margin: 8px 0;
-    font-size: 0.88rem; color: #fdba74; font-weight: 500;
+    font-size: 0.88rem; color: #9D8189; font-weight: 500;
 }
 .alerta {
-    background: #1c0a00; border: 1px solid #dc2626;
-    border-left: 4px solid #ef4444; border-radius: 8px;
+    background: #F4ACB7; border: 1px solid #9D8189;
+    border-left: 4px solid #9D8189; border-radius: 8px;
     padding: 14px 18px; margin: 8px 0;
-    font-size: 0.92rem; color: #fca5a5; font-weight: 600;
+    font-size: 0.92rem; color: #5a4a4a; font-weight: 600;
+}
+.bk-btn {
+    background: #F4ACB7 !important; color: #fff !important;
+    border-radius: 8px !important; font-weight: 700 !important;
+    font-size: 1rem !important; min-height: 50px !important;
+    width: 100% !important;
+}
+.bk-btn:hover { background: #9D8189 !important; }
+hr { border-color: #FFCAD4 !important; }
+textarea, input[type="text"] {
+    background-color: #FFE5D9 !important;
+    border: 1px solid #F4ACB7 !important;
+    border-radius: 6px !important;
+    color: #5a4a4a !important;
+}
+div[data-testid="stExpander"] {
+    border: 1px solid #FFCAD4 !important;
+    border-radius: 8px !important;
+    background: #FFE5D9 !important;
 }
 </style>
 """, unsafe_allow_html=True)
