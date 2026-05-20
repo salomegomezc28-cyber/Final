@@ -174,12 +174,14 @@ with col1:
             if publicar_mqtt({"luz": 1}):
                 st.session_state["luz"] = True
                 st.session_state["historial"].append({"ts": time.strftime("%H:%M:%S"), "cmd": "Luz encendida"})
+                st.rerun()
                 st.markdown('<div class="status-ok">✅ Luz encendida</div>', unsafe_allow_html=True)
     with luz_col2:
         if st.button("Apagar 💡"):
             if publicar_mqtt({"luz": 0}):
                 st.session_state["luz"] = False
                 st.session_state["historial"].append({"ts": time.strftime("%H:%M:%S"), "cmd": "Luz apagada"})
+                st.rerun()
                 st.markdown('<div class="status-ok">✅ Luz apagada</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -191,12 +193,14 @@ with col1:
             if publicar_mqtt({"puerta": "abre"}):
                 st.session_state["puerta"] = "abierta"
                 st.session_state["historial"].append({"ts": time.strftime("%H:%M:%S"), "cmd": "Puerta abierta"})
+                st.rerun()
                 st.markdown('<div class="status-ok">✅ Puerta abierta</div>', unsafe_allow_html=True)
     with p_col2:
         if st.button("Cerrar 🔒"):
             if publicar_mqtt({"puerta": "cierra"}):
                 st.session_state["puerta"] = "cerrada"
                 st.session_state["historial"].append({"ts": time.strftime("%H:%M:%S"), "cmd": "Puerta cerrada"})
+                st.rerun()
                 st.markdown('<div class="status-ok">✅ Puerta cerrada</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
