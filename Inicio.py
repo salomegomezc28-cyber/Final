@@ -56,6 +56,10 @@ h2, h3 { color: #9D8189 !important; font-weight: 600 !important; }
     background: #FFCAD4; border: 1px solid #F4ACB7;
     border-radius: 12px; padding: 24px 28px; margin-bottom: 16px;
 }
+.device-card h4 {
+    color: #9D8189 !important; margin: 0 0 16px 0 !important;
+    font-size: 1.05rem !important; font-weight: 600 !important;
+}
 .header-card {
     background: #FFCAD4; border: 1px solid #F4ACB7;
     border-left: 5px solid #9D8189; border-radius: 8px;
@@ -72,12 +76,6 @@ h2, h3 { color: #9D8189 !important; font-weight: 600 !important; }
     border-left: 4px solid #F4ACB7; border-radius: 8px;
     padding: 12px 18px; margin: 8px 0;
     font-size: 0.88rem; color: #9D8189; font-weight: 500;
-}
-.alerta {
-    background: #F4ACB7; border: 1px solid #9D8189;
-    border-left: 4px solid #9D8189; border-radius: 8px;
-    padding: 14px 18px; margin: 8px 0;
-    font-size: 0.92rem; color: #5a4a4a; font-weight: 600;
 }
 .bk-btn {
     background: #F4ACB7 !important; color: #fff !important;
@@ -102,9 +100,9 @@ div[data-testid="stExpander"] {
 """, unsafe_allow_html=True)
 
 # ── MQTT ─────────────────────────────────────
-BROKER  = "broker.mqttdashboard.com"
-PORT    = 1883
-TOPIC   = "casaIM/control"
+BROKER = "broker.mqttdashboard.com"
+PORT   = 1883
+TOPIC  = "casaIM/control"
 
 def publicar_mqtt(payload: dict):
     try:
@@ -119,11 +117,11 @@ def publicar_mqtt(payload: dict):
 
 # ── Session state ─────────────────────────────
 for key, default in {
-    "luz": False,
-    "alarma": False,
-    "puerta": "cerrada",
+    "luz":        False,
+    "alarma":     False,
+    "puerta":     "cerrada",
     "mqtt_error": "",
-    "historial": [],
+    "historial":  [],
 }.items():
     if key not in st.session_state:
         st.session_state[key] = default
@@ -134,11 +132,11 @@ with st.sidebar:
     st.divider()
     st.markdown("### CONEXIÓN MQTT")
     st.markdown(f"""
-    <div style='background:#0f172a;border:1px solid #334155;border-radius:8px;padding:12px 16px;'>
-        <p style='margin:0;color:#94a3b8;font-size:0.82rem;'>🔌 Broker</p>
-        <p style='margin:2px 0 0 0;color:#38bdf8;font-size:0.88rem;font-weight:600;'>{BROKER}</p>
-        <p style='margin:8px 0 0 0;color:#94a3b8;font-size:0.82rem;'>📢 Topic</p>
-        <p style='margin:2px 0 0 0;color:#38bdf8;font-size:0.88rem;font-weight:600;'>{TOPIC}</p>
+    <div style='background:#FFE5D9;border:1px solid #F4ACB7;border-radius:8px;padding:12px 16px;'>
+        <p style='margin:0;color:#9D8189;font-size:0.82rem;'>🔌 Broker</p>
+        <p style='margin:2px 0 0 0;color:#5a4a4a;font-size:0.88rem;font-weight:600;'>{BROKER}</p>
+        <p style='margin:8px 0 0 0;color:#9D8189;font-size:0.82rem;'>📢 Topic</p>
+        <p style='margin:2px 0 0 0;color:#5a4a4a;font-size:0.88rem;font-weight:600;'>{TOPIC}</p>
     </div>
     """, unsafe_allow_html=True)
     st.divider()
@@ -149,13 +147,13 @@ with st.sidebar:
     st.divider()
     st.markdown("### NAVEGACIÓN")
     st.markdown("🏠 **Panel de Control**")
-    st.markdown("[📡 Monitoreo y Acceso](./monitoreo)")
-    
+    st.markdown("📡 [Monitoreo y Acceso](Monitoreo)")
+
 # ── Header ────────────────────────────────────
 st.markdown("""
 <div class="header-card">
     <h1 style="margin:0; font-size:2rem;">🏠 Panel de Control</h1>
-    <p style="margin:6px 0 0 0; color:#38bdf8; font-size:0.97rem;">
+    <p style="margin:6px 0 0 0; color:#9D8189; font-size:0.97rem;">
         Casa Inteligente — Control por voz, botones y slider · ESP32 vía MQTT
     </p>
 </div>
@@ -169,8 +167,7 @@ with col1:
     st.markdown("### 🎛️ Control Manual")
 
     # Luz
-    st.markdown('<div class="device-card">', unsafe_allow_html=True)
-    st.markdown("#### 💡 Luz de la Sala")
+    st.markdown('<div class="device-card"><h4>💡 Luz de la Sala</h4>', unsafe_allow_html=True)
     luz_col1, luz_col2 = st.columns(2)
     with luz_col1:
         if st.button("Encender 💡"):
@@ -187,8 +184,7 @@ with col1:
     st.markdown('</div>', unsafe_allow_html=True)
 
     # Puerta
-    st.markdown('<div class="device-card">', unsafe_allow_html=True)
-    st.markdown("#### 🚪 Puerta Principal")
+    st.markdown('<div class="device-card"><h4>🚪 Puerta Principal</h4>', unsafe_allow_html=True)
     p_col1, p_col2 = st.columns(2)
     with p_col1:
         if st.button("Abrir 🔓"):
@@ -205,8 +201,7 @@ with col1:
     st.markdown('</div>', unsafe_allow_html=True)
 
     # Alarma
-    st.markdown('<div class="device-card">', unsafe_allow_html=True)
-    st.markdown("#### 🚨 Alarma")
+    st.markdown('<div class="device-card"><h4>🚨 Alarma</h4>', unsafe_allow_html=True)
     a_col1, a_col2 = st.columns(2)
     with a_col1:
         if st.button("Activar 🚨"):
@@ -225,22 +220,22 @@ with col1:
 # ── Columna 2: Control por voz ────────────────
 with col2:
     st.markdown("### 🎙️ Control por Voz")
-    st.markdown('<div class="device-card">', unsafe_allow_html=True)
+    st.markdown('<div class="device-card"><h4>🎙️ Habla un comando</h4>', unsafe_allow_html=True)
     st.markdown("""
-    <p style='color:#94a3b8;font-size:0.9rem;margin-bottom:16px;'>
+    <p style='color:#9D8189;font-size:0.9rem;margin-bottom:16px;'>
     Toca el botón, habla uno de estos comandos y se enviará automáticamente al ESP32:
     </p>
     <div style='display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;'>
-        <span style='background:#0f172a;border:1px solid #38bdf8;border-radius:20px;padding:4px 12px;font-size:0.82rem;color:#38bdf8;'>"enciende las luces"</span>
-        <span style='background:#0f172a;border:1px solid #38bdf8;border-radius:20px;padding:4px 12px;font-size:0.82rem;color:#38bdf8;'>"apaga las luces"</span>
-        <span style='background:#0f172a;border:1px solid #38bdf8;border-radius:20px;padding:4px 12px;font-size:0.82rem;color:#38bdf8;'>"abre la puerta"</span>
-        <span style='background:#0f172a;border:1px solid #38bdf8;border-radius:20px;padding:4px 12px;font-size:0.82rem;color:#38bdf8;'>"cierra la puerta"</span>
-        <span style='background:#0f172a;border:1px solid #38bdf8;border-radius:20px;padding:4px 12px;font-size:0.82rem;color:#38bdf8;'>"activa la alarma"</span>
-        <span style='background:#0f172a;border:1px solid #38bdf8;border-radius:20px;padding:4px 12px;font-size:0.82rem;color:#38bdf8;'>"desactiva la alarma"</span>
+        <span style='background:#FFE5D9;border:1px solid #9D8189;border-radius:20px;padding:4px 12px;font-size:0.82rem;color:#9D8189;'>"enciende las luces"</span>
+        <span style='background:#FFE5D9;border:1px solid #9D8189;border-radius:20px;padding:4px 12px;font-size:0.82rem;color:#9D8189;'>"apaga las luces"</span>
+        <span style='background:#FFE5D9;border:1px solid #9D8189;border-radius:20px;padding:4px 12px;font-size:0.82rem;color:#9D8189;'>"abre la puerta"</span>
+        <span style='background:#FFE5D9;border:1px solid #9D8189;border-radius:20px;padding:4px 12px;font-size:0.82rem;color:#9D8189;'>"cierra la puerta"</span>
+        <span style='background:#FFE5D9;border:1px solid #9D8189;border-radius:20px;padding:4px 12px;font-size:0.82rem;color:#9D8189;'>"activa la alarma"</span>
+        <span style='background:#FFE5D9;border:1px solid #9D8189;border-radius:20px;padding:4px 12px;font-size:0.82rem;color:#9D8189;'>"desactiva la alarma"</span>
     </div>
     """, unsafe_allow_html=True)
 
-    stt_button = Button(label="🎙 Iniciar escucha", width=400, button_type="primary")
+    stt_button = Button(label="🎙 Iniciar escucha", width=400, button_type="warning")
     stt_button.js_on_event("button_click", CustomJS(code="""
         var recognition = new webkitSpeechRecognition();
         recognition.lang = 'es-ES';
@@ -263,26 +258,24 @@ with col2:
     if result and "GET_TEXT" in result:
         texto = result["GET_TEXT"].strip().lower()
         st.markdown(f"""
-        <div style='background:#0f172a;border:1px solid #334155;border-radius:8px;
-        padding:12px 16px;margin:12px 0;font-size:0.95rem;color:#e2e8f0;'>
+        <div style='background:#FFE5D9;border:1px solid #F4ACB7;border-radius:8px;
+        padding:12px 16px;margin:12px 0;font-size:0.95rem;color:#5a4a4a;'>
         🎙 <strong>"{texto}"</strong>
         </div>""", unsafe_allow_html=True)
 
-        # Mapeo de comandos de voz
         comandos = {
-            "enciende las luces":   {"luz": 1},
-            "apaga las luces":      {"luz": 0},
-            "abre la puerta":       {"puerta": "abre"},
-            "cierra la puerta":     {"puerta": "cierra"},
-            "activa la alarma":     {"alarma": 1},
-            "desactiva la alarma":  {"alarma": 0},
+            "enciende las luces":  {"luz": 1},
+            "apaga las luces":     {"luz": 0},
+            "abre la puerta":      {"puerta": "abre"},
+            "cierra la puerta":    {"puerta": "cierra"},
+            "activa la alarma":    {"alarma": 1},
+            "desactiva la alarma": {"alarma": 0},
         }
 
         reconocido = False
         for cmd, payload in comandos.items():
             if cmd in texto:
                 if publicar_mqtt(payload):
-                    # Actualizar estado
                     if "luz" in payload:
                         st.session_state["luz"] = payload["luz"] == 1
                     if "puerta" in payload:
@@ -299,15 +292,15 @@ with col2:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Historial de comandos
+    # Historial
     if st.session_state["historial"]:
         st.markdown("### 📋 Historial de Comandos")
         st.markdown('<div class="device-card">', unsafe_allow_html=True)
         for item in reversed(st.session_state["historial"][-8:]):
             st.markdown(f"""
-            <div style='display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #1e293b;'>
-                <span style='color:#38bdf8;font-size:0.82rem;min-width:70px;'>{item['ts']}</span>
-                <span style='color:#e2e8f0;font-size:0.82rem;'>{item['cmd']}</span>
+            <div style='display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #FFE5D9;'>
+                <span style='color:#9D8189;font-size:0.82rem;min-width:70px;'>{item['ts']}</span>
+                <span style='color:#5a4a4a;font-size:0.82rem;'>{item['cmd']}</span>
             </div>""", unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
