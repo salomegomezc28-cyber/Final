@@ -44,7 +44,7 @@ div[data-testid="stExpander"] { border: 1px solid #FFCAD4 !important; border-rad
 """, unsafe_allow_html=True)
 
 # ── MQTT ─────────────────────────────────────
-BROKER = "test.mosquitto.org"
+BROKER = "broker.mqttdashboard.com"
 PORT   = 1883
 TOPIC  = "casaIM/control"
 
