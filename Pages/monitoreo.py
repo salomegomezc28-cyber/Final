@@ -28,7 +28,7 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     font-size: 0.95rem !important; text-transform: uppercase !important;
 }
 [data-testid="stSidebar"] label { color: #5a4a4a !important; font-size: 0.85rem !important; }
-h1 { color: #F4ACB7 !important; font-weight: 700 !important; }
+h1 { color: #FFF5F5 !important; font-weight: 700 !important; }
 h2, h3 { color: #9D8189 !important; font-weight: 600 !important; }
 .stButton > button {
     background: #F4ACB7 !important; color: #ffffff !important;
