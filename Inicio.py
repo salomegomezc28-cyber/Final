@@ -100,7 +100,7 @@ div[data-testid="stExpander"] {
 """, unsafe_allow_html=True)
 
 # ── MQTT ─────────────────────────────────────
-BROKER = "broker.mqttdashboard.com"
+BROKER = "test.mosquitto.org"
 PORT   = 1883
 TOPIC  = "casaIM/control"
 
