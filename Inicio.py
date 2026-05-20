@@ -130,9 +130,9 @@ with st.sidebar:
     st.markdown(f"🚪 Puerta: {'🔓 Abierta' if st.session_state['puerta'] == 'abierta' else '🔒 Cerrada'}")
     st.divider()
     st.markdown("### NAVEGACIÓN")
-    st.page_link("inicio.py",            label="🏠 Panel de Control", )
-    st.page_link("pages/monitoreo.py",   label="📡 Monitoreo y Acceso")
-
+    st.markdown("🏠 **Panel de Control**")
+    st.markdown("[📡 Monitoreo y Acceso](./monitoreo)")
+    
 # ── Header ────────────────────────────────────
 st.markdown("""
 <div class="header-card">
