@@ -92,7 +92,7 @@ textarea, input[type="text"] {
 """, unsafe_allow_html=True)
 
 # ── MQTT ─────────────────────────────────────
-BROKER         = "broker.mqttdashboard.com"
+BROKER         = "test.mosquitto.org"
 PORT           = 1883
 TOPIC_SENSORES = "casaIM/sensores"
 TOPIC_CONTROL  = "casaIM/control"
