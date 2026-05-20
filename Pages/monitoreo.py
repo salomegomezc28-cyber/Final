@@ -35,7 +35,7 @@ textarea, input[type="text"] { background-color: #FFE5D9 !important; border: 1px
 </style>
 """, unsafe_allow_html=True)
 
-BROKER         = "test.mosquitto.org"
+BROKER         = "broker.mqttdashboard.com"
 PORT           = 1883
 TOPIC_SENSORES = "casaIM/sensores"
 TOPIC_CONTROL  = "casaIM/control"
