@@ -2,8 +2,7 @@ import streamlit as st
 import paho.mqtt.client as mqtt
 import json
 import time
-import base64
-import anthropic
+import random
 
 # ── Configuración de página ──────────────────
 st.set_page_config(
@@ -71,10 +70,10 @@ h2, h3 { color: #7dd3fc !important; font-weight: 600 !important; }
 """, unsafe_allow_html=True)
 
 # ── MQTT ─────────────────────────────────────
-BROKER          = "broker.mqttdashboard.com"
-PORT            = 1883
-TOPIC_SENSORES  = "casaIM/sensores"
-TOPIC_CONTROL   = "casaIM/control"
+BROKER         = "broker.mqttdashboard.com"
+PORT           = 1883
+TOPIC_SENSORES = "casaIM/sensores"
+TOPIC_CONTROL  = "casaIM/control"
 
 def obtener_sensores():
     datos = {"received": False, "payload": None}
@@ -108,6 +107,35 @@ def publicar_mqtt(payload: dict):
         return True
     except:
         return False
+
+def analizar_acceso_simulado(nombre: str, personas_auth: list):
+    """
+    Simula un análisis de reconocimiento facial comparando
+    el nombre ingresado contra la lista de autorizados.
+    """
+    time.sleep(1.5)  # Simular tiempo de procesamiento
+
+    nombre_lower = nombre.strip().lower()
+    autorizados_lower = [p.strip().lower() for p in personas_auth if p.strip()]
+
+    # Verificar si el nombre está en la lista
+    autorizado = any(nombre_lower in auth or auth in nombre_lower
+                     for auth in autorizados_lower)
+
+    if autorizado:
+        confianza = random.randint(88, 99)
+        return {
+            "decision":   "AUTORIZADO",
+            "confianza":  confianza,
+            "razon":      f"Persona identificada como '{nombre}' en la lista de acceso autorizado."
+        }
+    else:
+        confianza = random.randint(85, 97)
+        return {
+            "decision":  "DENEGADO",
+            "confianza": confianza,
+            "razon":     f"'{nombre}' no se encuentra registrado en la lista de acceso."
+        }
 
 # ── Session state ─────────────────────────────
 for key, default in {
@@ -147,7 +175,7 @@ st.markdown("""
 <div class="header-card">
     <h1 style="margin:0; font-size:2rem;">📡 Monitoreo y Acceso</h1>
     <p style="margin:6px 0 0 0; color:#38bdf8; font-size:0.97rem;">
-        Temperatura · Humedad · Control de acceso con IA
+        Temperatura · Humedad · Control de acceso inteligente
     </p>
 </div>
 """, unsafe_allow_html=True)
@@ -161,22 +189,22 @@ with col1:
     st.markdown('<div class="device-card">', unsafe_allow_html=True)
 
     if st.button("🔄 Actualizar Sensores"):
-        with st.spinner("Leyendo sensores..."):
+        with st.spinner("Leyendo sensores del ESP32..."):
             datos = obtener_sensores()
             if datos and "error" not in datos:
                 temp = datos.get("temp", 0)
-                hum  = datos.get("hum", 0)
-                # Guardar historial
-                ts = time.strftime("%H:%M:%S")
+                hum  = datos.get("hum",  0)
+                ts   = time.strftime("%H:%M:%S")
                 st.session_state["historial_temp"].append(temp)
                 st.session_state["historial_hum"].append(hum)
                 st.session_state["historial_ts"].append(ts)
-                # Mantener últimas 20 lecturas
                 for k in ["historial_temp", "historial_hum", "historial_ts"]:
                     if len(st.session_state[k]) > 20:
                         st.session_state[k] = st.session_state[k][-20:]
+            else:
+                st.markdown('<div class="status-err">❌ No se recibieron datos. Verifica que Wokwi esté corriendo.</div>',
+                            unsafe_allow_html=True)
 
-    # Métricas
     if st.session_state["historial_temp"]:
         temp = st.session_state["historial_temp"][-1]
         hum  = st.session_state["historial_hum"][-1]
@@ -184,18 +212,17 @@ with col1:
 
         m1, m2 = st.columns(2)
         with m1:
-            st.metric("🌡️ Temperatura", f"{temp}°C",
-                      delta=f"{round(temp - st.session_state['historial_temp'][-2], 1)}°C"
-                      if len(st.session_state["historial_temp"]) > 1 else None)
+            delta_t = round(temp - st.session_state["historial_temp"][-2], 1) \
+                      if len(st.session_state["historial_temp"]) > 1 else None
+            st.metric("🌡️ Temperatura", f"{temp}°C", delta=f"{delta_t}°C" if delta_t else None)
         with m2:
-            st.metric("💧 Humedad", f"{hum}%",
-                      delta=f"{round(hum - st.session_state['historial_hum'][-2], 1)}%"
-                      if len(st.session_state["historial_hum"]) > 1 else None)
+            delta_h = round(hum - st.session_state["historial_hum"][-2], 1) \
+                      if len(st.session_state["historial_hum"]) > 1 else None
+            st.metric("💧 Humedad", f"{hum}%", delta=f"{delta_h}%" if delta_h else None)
 
-        st.markdown(f"<p style='color:#64748b;font-size:0.8rem;'>Última lectura: {ts}</p>",
+        st.markdown(f"<p style='color:#64748b;font-size:0.8rem;margin-top:8px;'>Última lectura: {ts}</p>",
                     unsafe_allow_html=True)
 
-        # Alertas
         if temp > umbral_temp:
             st.markdown(f'<div class="alerta">🔥 ALERTA: Temperatura alta ({temp}°C > {umbral_temp}°C)</div>',
                         unsafe_allow_html=True)
@@ -208,112 +235,66 @@ with col1:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Gráfica de historial
+    # Gráfica historial
     if len(st.session_state["historial_temp"]) > 1:
         st.markdown("### 📈 Historial")
         st.markdown('<div class="device-card">', unsafe_allow_html=True)
-        chart_data = {
+        st.line_chart({
             "Temperatura (°C)": st.session_state["historial_temp"],
             "Humedad (%)":      st.session_state["historial_hum"],
-        }
-        st.line_chart(chart_data)
+        })
         st.markdown('</div>', unsafe_allow_html=True)
 
-# ── Columna 2: Control de acceso con IA ───────
+# ── Columna 2: Control de acceso ──────────────
 with col2:
-    st.markdown("### 🔐 Control de Acceso con IA")
+    st.markdown("### 🔐 Control de Acceso")
     st.markdown('<div class="device-card">', unsafe_allow_html=True)
     st.markdown("""
     <p style='color:#94a3b8;font-size:0.9rem;margin-bottom:16px;'>
-    Sube una foto de la persona en la entrada. La IA analizará la imagen
-    y decidirá si conceder o denegar el acceso.
+    Sube una foto de la persona en la entrada e ingresa su nombre.
+    El sistema verificará si está autorizada y controlará la puerta automáticamente.
     </p>
     """, unsafe_allow_html=True)
 
-    # Lista de personas autorizadas (configurable)
+    # Lista de personas autorizadas
     st.markdown("#### 👥 Personas autorizadas")
-    personas_auth = st.text_area(
+    personas_texto = st.text_area(
         "Una por línea:",
-        value="María José\nEstudiante con uniforme\nPersona con gafas",
-        height=80,
+        value="María José\nJuan Pérez\nProfesor\nEstudiante",
+        height=100,
     )
+    personas_auth = [p.strip() for p in personas_texto.split("\n") if p.strip()]
 
     st.markdown("#### 📸 Imagen de la entrada")
     imagen = st.file_uploader("Sube una foto:", type=["jpg", "jpeg", "png"])
 
     if imagen:
-        st.image(imagen, caption="Imagen capturada", use_container_width=True)
+        st.image(imagen, caption="Imagen capturada en la entrada", use_container_width=True)
 
-        if st.button("🔍 Analizar con IA"):
-            with st.spinner("Analizando imagen..."):
-                try:
-                    # Convertir imagen a base64
-                    img_bytes  = imagen.read()
-                    img_base64 = base64.standard_b64encode(img_bytes).decode("utf-8")
-                    ext        = imagen.name.split(".")[-1].lower()
-                    media_type = "image/jpeg" if ext in ["jpg", "jpeg"] else "image/png"
+    st.markdown("#### 🪪 Nombre de la persona")
+    nombre_persona = st.text_input("Ingresa el nombre a verificar:", placeholder="Ej: María José")
 
-                    # Llamar a Claude Vision
-                    client_ai = anthropic.Anthropic()
-                    lista_auth = personas_auth.strip()
+    if st.button("🔍 Verificar Acceso"):
+        if not nombre_persona.strip():
+            st.markdown('<div class="status-err">⚠️ Ingresa el nombre de la persona.</div>',
+                        unsafe_allow_html=True)
+        else:
+            with st.spinner("Verificando identidad..."):
+                resultado = analizar_acceso_simulado(nombre_persona, personas_auth)
+                st.session_state["resultado_ia"]  = resultado
+                st.session_state["ultimo_acceso"] = time.strftime("%H:%M:%S")
 
-                    respuesta = client_ai.messages.create(
-                        model="claude-opus-4-5",
-                        max_tokens=300,
-                        messages=[{
-                            "role": "user",
-                            "content": [
-                                {
-                                    "type": "image",
-                                    "source": {
-                                        "type":       "base64",
-                                        "media_type": media_type,
-                                        "data":       img_base64,
-                                    },
-                                },
-                                {
-                                    "type": "text",
-                                    "text": f"""Eres el sistema de control de acceso de una casa inteligente.
-Analiza esta imagen y determina si la persona debe tener acceso.
+                if resultado["decision"] == "AUTORIZADO":
+                    publicar_mqtt({"acceso": "autorizado"})
+                else:
+                    publicar_mqtt({"alarma": 1})
+                    time.sleep(2)
+                    publicar_mqtt({"alarma": 0})
 
-Personas autorizadas:
-{lista_auth}
-
-Responde SOLO en este formato JSON exacto:
-{{
-  "decision": "AUTORIZADO" o "DENEGADO",
-  "confianza": número del 0 al 100,
-  "razon": "explicación breve en español"
-}}"""
-                                }
-                            ],
-                        }]
-                    )
-
-                    # Parsear respuesta
-                    texto_resp = respuesta.content[0].text.strip()
-                    # Limpiar posibles bloques de código
-                    texto_resp = texto_resp.replace("```json", "").replace("```", "").strip()
-                    resultado  = json.loads(texto_resp)
-                    st.session_state["resultado_ia"] = resultado
-                    st.session_state["ultimo_acceso"] = time.strftime("%H:%M:%S")
-
-                    # Actuar según decisión
-                    if resultado["decision"] == "AUTORIZADO":
-                        publicar_mqtt({"acceso": "autorizado"})
-                    else:
-                        publicar_mqtt({"alarma": 1})
-                        time.sleep(2)
-                        publicar_mqtt({"alarma": 0})
-
-                except Exception as e:
-                    st.markdown(f'<div class="status-err">❌ Error: {e}</div>',
-                                unsafe_allow_html=True)
-
-    # Mostrar resultado
+    # Resultado
     if st.session_state["resultado_ia"]:
-        r = st.session_state["resultado_ia"]
-        ts = st.session_state["ultimo_acceso"]
+        r      = st.session_state["resultado_ia"]
+        ts     = st.session_state["ultimo_acceso"]
         es_auth = r["decision"] == "AUTORIZADO"
 
         color  = "#052e16" if es_auth else "#1c0a00"
@@ -334,7 +315,7 @@ Responde SOLO en este formato JSON exacto:
                 <strong>Razón:</strong> {r["razon"]}
             </p>
             <p style='color:#64748b;margin:8px 0 0 0;font-size:0.78rem;'>
-                Analizado a las {ts}
+                Verificado a las {ts}
             </p>
         </div>
         """, unsafe_allow_html=True)
