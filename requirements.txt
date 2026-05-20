@@ -1,4 +1,5 @@
 streamlit
 paho-mqtt
+numpy==1.24.3
 bokeh==2.4.3
 streamlit-bokeh-events
