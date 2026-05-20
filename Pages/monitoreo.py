@@ -54,6 +54,10 @@ h2, h3 { color: #9D8189 !important; font-weight: 600 !important; }
     background: #FFCAD4; border: 1px solid #F4ACB7;
     border-radius: 12px; padding: 24px 28px; margin-bottom: 16px;
 }
+.device-card h4 {
+    color: #9D8189 !important; margin: 0 0 16px 0 !important;
+    font-size: 1.05rem !important; font-weight: 600 !important;
+}
 .header-card {
     background: #FFCAD4; border: 1px solid #F4ACB7;
     border-left: 5px solid #9D8189; border-radius: 8px;
@@ -77,24 +81,12 @@ h2, h3 { color: #9D8189 !important; font-weight: 600 !important; }
     padding: 14px 18px; margin: 8px 0;
     font-size: 0.92rem; color: #5a4a4a; font-weight: 600;
 }
-.bk-btn {
-    background: #F4ACB7 !important; color: #fff !important;
-    border-radius: 8px !important; font-weight: 700 !important;
-    font-size: 1rem !important; min-height: 50px !important;
-    width: 100% !important;
-}
-.bk-btn:hover { background: #9D8189 !important; }
 hr { border-color: #FFCAD4 !important; }
 textarea, input[type="text"] {
     background-color: #FFE5D9 !important;
     border: 1px solid #F4ACB7 !important;
     border-radius: 6px !important;
     color: #5a4a4a !important;
-}
-div[data-testid="stExpander"] {
-    border: 1px solid #FFCAD4 !important;
-    border-radius: 8px !important;
-    background: #FFE5D9 !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -139,31 +131,23 @@ def publicar_mqtt(payload: dict):
         return False
 
 def analizar_acceso_simulado(nombre: str, personas_auth: list):
-    """
-    Simula un análisis de reconocimiento facial comparando
-    el nombre ingresado contra la lista de autorizados.
-    """
-    time.sleep(1.5)  # Simular tiempo de procesamiento
-
-    nombre_lower = nombre.strip().lower()
+    time.sleep(1.5)
+    nombre_lower      = nombre.strip().lower()
     autorizados_lower = [p.strip().lower() for p in personas_auth if p.strip()]
-
-    # Verificar si el nombre está en la lista
-    autorizado = any(nombre_lower in auth or auth in nombre_lower
-                     for auth in autorizados_lower)
-
+    autorizado = any(
+        nombre_lower in auth or auth in nombre_lower
+        for auth in autorizados_lower
+    )
     if autorizado:
-        confianza = random.randint(88, 99)
         return {
-            "decision":   "AUTORIZADO",
-            "confianza":  confianza,
-            "razon":      f"Persona identificada como '{nombre}' en la lista de acceso autorizado."
+            "decision":  "AUTORIZADO",
+            "confianza": random.randint(88, 99),
+            "razon":     f"Persona identificada como '{nombre}' en la lista de acceso autorizado."
         }
     else:
-        confianza = random.randint(85, 97)
         return {
             "decision":  "DENEGADO",
-            "confianza": confianza,
+            "confianza": random.randint(85, 97),
             "razon":     f"'{nombre}' no se encuentra registrado en la lista de acceso."
         }
 
@@ -184,11 +168,11 @@ with st.sidebar:
     st.divider()
     st.markdown("### CONEXIÓN MQTT")
     st.markdown(f"""
-    <div style='background:#0f172a;border:1px solid #334155;border-radius:8px;padding:12px 16px;'>
-        <p style='margin:0;color:#94a3b8;font-size:0.82rem;'>🔌 Broker</p>
-        <p style='margin:2px 0 0 0;color:#38bdf8;font-size:0.88rem;font-weight:600;'>{BROKER}</p>
-        <p style='margin:8px 0 0 0;color:#94a3b8;font-size:0.82rem;'>📥 Topic sensores</p>
-        <p style='margin:2px 0 0 0;color:#38bdf8;font-size:0.88rem;font-weight:600;'>{TOPIC_SENSORES}</p>
+    <div style='background:#FFE5D9;border:1px solid #F4ACB7;border-radius:8px;padding:12px 16px;'>
+        <p style='margin:0;color:#9D8189;font-size:0.82rem;'>🔌 Broker</p>
+        <p style='margin:2px 0 0 0;color:#5a4a4a;font-size:0.88rem;font-weight:600;'>{BROKER}</p>
+        <p style='margin:8px 0 0 0;color:#9D8189;font-size:0.82rem;'>📥 Topic sensores</p>
+        <p style='margin:2px 0 0 0;color:#5a4a4a;font-size:0.88rem;font-weight:600;'>{TOPIC_SENSORES}</p>
     </div>
     """, unsafe_allow_html=True)
     st.divider()
@@ -197,14 +181,14 @@ with st.sidebar:
     umbral_hum  = st.slider("💧 Humedad máxima (%)", 40, 100, 80)
     st.divider()
     st.markdown("### NAVEGACIÓN")
-    st.markdown("[🏠 Panel de Control](../)")
+    st.markdown("🏠 [Panel de Control](inicio)")
     st.markdown("📡 **Monitoreo y Acceso**")
 
 # ── Header ────────────────────────────────────
 st.markdown("""
 <div class="header-card">
     <h1 style="margin:0; font-size:2rem;">📡 Monitoreo y Acceso</h1>
-    <p style="margin:6px 0 0 0; color:#38bdf8; font-size:0.97rem;">
+    <p style="margin:6px 0 0 0; color:#9D8189; font-size:0.97rem;">
         Temperatura · Humedad · Control de acceso inteligente
     </p>
 </div>
@@ -216,7 +200,7 @@ col1, col2 = st.columns(2, gap="large")
 # ── Columna 1: Sensores ───────────────────────
 with col1:
     st.markdown("### 🌡️ Sensores Ambientales")
-    st.markdown('<div class="device-card">', unsafe_allow_html=True)
+    st.markdown('<div class="device-card"><h4>📊 Lectura en tiempo real</h4>', unsafe_allow_html=True)
 
     if st.button("🔄 Actualizar Sensores"):
         with st.spinner("Leyendo sensores del ESP32..."):
@@ -250,7 +234,7 @@ with col1:
                       if len(st.session_state["historial_hum"]) > 1 else None
             st.metric("💧 Humedad", f"{hum}%", delta=f"{delta_h}%" if delta_h else None)
 
-        st.markdown(f"<p style='color:#64748b;font-size:0.8rem;margin-top:8px;'>Última lectura: {ts}</p>",
+        st.markdown(f"<p style='color:#9D8189;font-size:0.8rem;margin-top:8px;'>Última lectura: {ts}</p>",
                     unsafe_allow_html=True)
 
         if temp > umbral_temp:
@@ -260,7 +244,7 @@ with col1:
             st.markdown(f'<div class="alerta">💧 ALERTA: Humedad alta ({hum}% > {umbral_hum}%)</div>',
                         unsafe_allow_html=True)
     else:
-        st.markdown("<p style='color:#64748b;'>Presiona 'Actualizar Sensores' para leer datos del ESP32.</p>",
+        st.markdown("<p style='color:#9D8189;'>Presiona 'Actualizar Sensores' para leer datos del ESP32.</p>",
                     unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
@@ -268,7 +252,7 @@ with col1:
     # Gráfica historial
     if len(st.session_state["historial_temp"]) > 1:
         st.markdown("### 📈 Historial")
-        st.markdown('<div class="device-card">', unsafe_allow_html=True)
+        st.markdown('<div class="device-card"><h4>📉 Últimas lecturas</h4>', unsafe_allow_html=True)
         st.line_chart({
             "Temperatura (°C)": st.session_state["historial_temp"],
             "Humedad (%)":      st.session_state["historial_hum"],
@@ -278,31 +262,31 @@ with col1:
 # ── Columna 2: Control de acceso ──────────────
 with col2:
     st.markdown("### 🔐 Control de Acceso")
-    st.markdown('<div class="device-card">', unsafe_allow_html=True)
+    st.markdown('<div class="device-card"><h4>👥 Verificación de identidad</h4>', unsafe_allow_html=True)
     st.markdown("""
-    <p style='color:#94a3b8;font-size:0.9rem;margin-bottom:16px;'>
+    <p style='color:#9D8189;font-size:0.9rem;margin-bottom:16px;'>
     Sube una foto de la persona en la entrada e ingresa su nombre.
     El sistema verificará si está autorizada y controlará la puerta automáticamente.
     </p>
     """, unsafe_allow_html=True)
 
-    # Lista de personas autorizadas
-    st.markdown("#### 👥 Personas autorizadas")
+    st.markdown("**Personas autorizadas** — una por línea:")
     personas_texto = st.text_area(
-        "Una por línea:",
+        "Lista de acceso:",
         value="María José\nJuan Pérez\nProfesor\nEstudiante",
         height=100,
+        label_visibility="collapsed",
     )
     personas_auth = [p.strip() for p in personas_texto.split("\n") if p.strip()]
 
-    st.markdown("#### 📸 Imagen de la entrada")
-    imagen = st.file_uploader("Sube una foto:", type=["jpg", "jpeg", "png"])
+    st.markdown("**📸 Foto de la entrada**")
+    imagen = st.file_uploader("Sube una foto:", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
 
     if imagen:
         st.image(imagen, caption="Imagen capturada en la entrada", use_container_width=True)
 
-    st.markdown("#### 🪪 Nombre de la persona")
-    nombre_persona = st.text_input("Ingresa el nombre a verificar:", placeholder="Ej: María José")
+    st.markdown("**🪪 Nombre a verificar**")
+    nombre_persona = st.text_input("Nombre:", placeholder="Ej: María José", label_visibility="collapsed")
 
     if st.button("🔍 Verificar Acceso"):
         if not nombre_persona.strip():
@@ -323,28 +307,27 @@ with col2:
 
     # Resultado
     if st.session_state["resultado_ia"]:
-        r      = st.session_state["resultado_ia"]
-        ts     = st.session_state["ultimo_acceso"]
+        r       = st.session_state["resultado_ia"]
+        ts      = st.session_state["ultimo_acceso"]
         es_auth = r["decision"] == "AUTORIZADO"
 
-        color  = "#052e16" if es_auth else "#1c0a00"
-        border = "#22c55e" if es_auth else "#ef4444"
-        text   = "#86efac" if es_auth else "#fca5a5"
+        color  = "#D8E2DC" if es_auth else "#FFCAD4"
+        border = "#9D8189" if es_auth else "#F4ACB7"
         icono  = "✅" if es_auth else "🚫"
 
         st.markdown(f"""
         <div style='background:{color};border:1px solid {border};border-left:5px solid {border};
         border-radius:12px;padding:20px 24px;margin-top:16px;'>
-            <h3 style='color:{text};margin:0 0 8px 0;font-size:1.3rem;'>
+            <h3 style='color:#5a4a4a;margin:0 0 8px 0;font-size:1.3rem;'>
                 {icono} {r["decision"]}
             </h3>
-            <p style='color:{text};margin:0;font-size:0.9rem;'>
+            <p style='color:#5a4a4a;margin:0;font-size:0.9rem;'>
                 <strong>Confianza:</strong> {r["confianza"]}%
             </p>
-            <p style='color:{text};margin:6px 0 0 0;font-size:0.9rem;'>
+            <p style='color:#5a4a4a;margin:6px 0 0 0;font-size:0.9rem;'>
                 <strong>Razón:</strong> {r["razon"]}
             </p>
-            <p style='color:#64748b;margin:8px 0 0 0;font-size:0.78rem;'>
+            <p style='color:#9D8189;margin:8px 0 0 0;font-size:0.78rem;'>
                 Verificado a las {ts}
             </p>
         </div>
