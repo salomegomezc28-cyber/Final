@@ -1,10 +1,15 @@
+"""
+📡 Monitoreo y Acceso — Casa Inteligente
+Interfaces Multimodales · Sensores DHT22 + Control de acceso por lista
+"""
+
 import streamlit as st
 import paho.mqtt.client as mqtt
 import json
 import time
 import threading
-import random
 
+# ─────────────────────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="Monitoreo y Acceso",
     page_icon="📡",
@@ -35,18 +40,16 @@ textarea, input[type="text"] { background-color: #FFE5D9 !important; border: 1px
 </style>
 """, unsafe_allow_html=True)
 
+# ── MQTT ──────────────────────────────────────────────────────────────────────
 BROKER         = "broker.mqttdashboard.com"
 PORT           = 1883
 TOPIC_SENSORES = "casaIM/sensores"
 TOPIC_CONTROL  = "casaIM/control"
 
 def publicar_mqtt(payload: dict) -> tuple[bool, str]:
-    """
-    Mismo patrón que Inicio.py:
-    connect_async → loop_start → esperar on_connect → publish → esperar on_publish
-    """
+    """Publica en MQTT esperando CONNACK antes de publicar (QoS 1)."""
     evt_conectado = threading.Event()
-    evt_publicado  = threading.Event()
+    evt_publicado = threading.Event()
     error = [None]
 
     def on_connect(client, userdata, flags, rc):
@@ -60,21 +63,29 @@ def publicar_mqtt(payload: dict) -> tuple[bool, str]:
         evt_publicado.set()
 
     try:
-        c = mqtt.Client(client_id=f"acceso_{int(time.time()*1000)}", clean_session=True, protocol=mqtt.MQTTv311)
+        c = mqtt.Client(
+            client_id=f"acceso_{int(time.time()*1000)}",
+            clean_session=True,
+            protocol=mqtt.MQTTv311,
+        )
         c.on_connect = on_connect
         c.on_publish  = on_publish
         c.connect_async(BROKER, PORT, keepalive=10)
         c.loop_start()
-        if not evt_conectado.wait(timeout=6):
+
+        if not evt_conectado.wait(timeout=8):
             c.loop_stop(); c.disconnect()
             return False, "Timeout conectando al broker"
         if error[0]:
             c.loop_stop(); c.disconnect()
             return False, error[0]
+
         c.publish(TOPIC_CONTROL, json.dumps(payload), qos=1)
-        if not evt_publicado.wait(timeout=5):
+
+        if not evt_publicado.wait(timeout=6):
             c.loop_stop(); c.disconnect()
             return False, "Timeout esperando confirmación"
+
         c.loop_stop(); c.disconnect()
         return True, ""
     except Exception as e:
@@ -82,10 +93,7 @@ def publicar_mqtt(payload: dict) -> tuple[bool, str]:
 
 
 def obtener_sensores() -> dict:
-    """
-    Se suscribe a TOPIC_SENSORES y espera el próximo mensaje del ESP32.
-    Usa on_connect para suscribirse solo cuando la conexión está lista.
-    """
+    """Se suscribe a TOPIC_SENSORES y espera el próximo mensaje del ESP32."""
     evt_conectado = threading.Event()
     evt_mensaje   = threading.Event()
     resultado = [None]
@@ -108,54 +116,48 @@ def obtener_sensores() -> dict:
             evt_mensaje.set()
 
     try:
-        c = mqtt.Client(client_id=f"monitor_{int(time.time()*1000)}", clean_session=True, protocol=mqtt.MQTTv311)
+        c = mqtt.Client(
+            client_id=f"monitor_{int(time.time()*1000)}",
+            clean_session=True,
+            protocol=mqtt.MQTTv311,
+        )
         c.on_connect = on_connect
         c.on_message = on_message
         c.connect_async(BROKER, PORT, keepalive=10)
         c.loop_start()
 
-        # Esperar conexión
-        if not evt_conectado.wait(timeout=6):
+        if not evt_conectado.wait(timeout=8):
             c.loop_stop(); c.disconnect()
             return {"error": "Timeout conectando al broker MQTT"}
         if error[0]:
             c.loop_stop(); c.disconnect()
             return {"error": error[0]}
 
-        # Esperar mensaje del ESP32 (el ESP32 publica cada 3 segundos)
-        if not evt_mensaje.wait(timeout=8):
+        # El ESP32 publica cada 3s — esperamos hasta 10s
+        if not evt_mensaje.wait(timeout=10):
             c.loop_stop(); c.disconnect()
-            return {"error": "No se recibió respuesta del ESP32 en 8s. ¿Está corriendo Wokwi?"}
+            return {"error": "No se recibió respuesta del ESP32 en 10s. ¿Está corriendo Wokwi?"}
 
         c.loop_stop(); c.disconnect()
         if error[0]:
             return {"error": error[0]}
         return resultado[0]
-
     except Exception as e:
         return {"error": str(e)}
 
 
-def analizar_acceso(nombre: str, personas_auth: list) -> dict:
-    time.sleep(1.2)
-    nombre_lower      = nombre.strip().lower()
-    autorizados_lower = [p.strip().lower() for p in personas_auth if p.strip()]
-    autorizado = any(nombre_lower in a or a in nombre_lower for a in autorizados_lower)
-    if autorizado:
-        return {"decision": "AUTORIZADO", "confianza": random.randint(88, 99),
-                "razon": f"'{nombre}' está en la lista de acceso autorizado."}
-    else:
-        return {"decision": "DENEGADO", "confianza": random.randint(85, 97),
-                "razon": f"'{nombre}' no está registrado en la lista de acceso."}
-
-
+# ── Session state ─────────────────────────────────────────────────────────────
 for key, default in {
-    "historial_temp": [], "historial_hum": [], "historial_ts": [],
-    "ultimo_acceso": None, "resultado_ia": None,
+    "historial_temp":  [],
+    "historial_hum":   [],
+    "historial_ts":    [],
+    "ultimo_acceso":   None,
+    "resultado_acceso": None,
 }.items():
     if key not in st.session_state:
         st.session_state[key] = default
 
+# ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("## 📡 Monitoreo")
     st.divider()
@@ -177,18 +179,21 @@ with st.sidebar:
     st.markdown("🏠 [Panel de Control](/)")
     st.markdown("📡 **Monitoreo y Acceso**")
 
+# ── Header ────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="header-card">
     <h1 style="margin:0; font-size:2rem;">📡 Monitoreo y Acceso</h1>
-    <p style="margin:6px 0 0 0; color:#9D8189; font-size:0.97rem;">Temperatura · Humedad · Control de acceso inteligente</p>
+    <p style="margin:6px 0 0 0; color:#9D8189; font-size:0.97rem;">
+        Temperatura · Humedad · Control de acceso por lista
+    </p>
 </div>
 """, unsafe_allow_html=True)
 
 col1, col2 = st.columns(2, gap="large")
 
-# ════════════════════════════════════════════
-# Columna 1 — Sensores
-# ════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════
+# COLUMNA 1 — Sensores ambientales
+# ══════════════════════════════════════════════════════════════════════════════
 with col1:
     st.markdown("### 🌡️ Sensores Ambientales")
     st.markdown('<div class="device-card"><h4>📊 Lectura en tiempo real</h4>', unsafe_allow_html=True)
@@ -196,6 +201,7 @@ with col1:
     if st.button("🔄 Actualizar Sensores"):
         with st.spinner("Esperando datos del ESP32... (publica cada 3s)"):
             datos = obtener_sensores()
+
         if "error" in datos:
             st.markdown(f'<div class="status-err">❌ {datos["error"]}</div>', unsafe_allow_html=True)
         else:
@@ -237,23 +243,31 @@ with col1:
     if len(st.session_state["historial_temp"]) > 1:
         st.markdown("### 📈 Historial")
         st.markdown('<div class="device-card"><h4>📉 Últimas lecturas</h4>', unsafe_allow_html=True)
-        st.line_chart({"Temperatura (°C)": st.session_state["historial_temp"], "Humedad (%)": st.session_state["historial_hum"]})
+        st.line_chart({
+            "Temperatura (°C)": st.session_state["historial_temp"],
+            "Humedad (%)":      st.session_state["historial_hum"],
+        })
         st.markdown('</div>', unsafe_allow_html=True)
 
-# ════════════════════════════════════════════
-# Columna 2 — Control de acceso
-# ════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════
+# COLUMNA 2 — Control de acceso por lista
+# ══════════════════════════════════════════════════════════════════════════════
 with col2:
     st.markdown("### 🔐 Control de Acceso")
-    st.markdown('<div class="device-card"><h4>👥 Verificación de identidad</h4>', unsafe_allow_html=True)
-    st.markdown("<p style='color:#9D8189;font-size:0.9rem;margin-bottom:16px;'>Ingresa el nombre de la persona. El sistema verificará si está autorizada y controlará la puerta automáticamente.</p>", unsafe_allow_html=True)
+    st.markdown('<div class="device-card"><h4>👥 Verificación por lista</h4>', unsafe_allow_html=True)
+    st.markdown("<p style='color:#9D8189;font-size:0.9rem;margin-bottom:16px;'>Ingresa el nombre de la persona. El sistema verificará si está en la lista y controlará la puerta automáticamente.</p>", unsafe_allow_html=True)
 
     st.markdown("**Personas autorizadas** — una por línea:")
-    personas_texto = st.text_area("Lista:", value="María José\nJuan Pérez\nProfesor\nEstudiante", height=100, label_visibility="collapsed")
-    personas_auth  = [p.strip() for p in personas_texto.split("\n") if p.strip()]
+    personas_texto = st.text_area(
+        "Lista:",
+        value="María José\nJuan Pérez\nProfesor\nEstudiante",
+        height=100,
+        label_visibility="collapsed",
+    )
+    personas_auth = [p.strip().lower() for p in personas_texto.split("\n") if p.strip()]
 
     st.markdown("**📸 Foto de la entrada** *(opcional)*")
-    imagen = st.file_uploader("Foto:", type=["jpg","jpeg","png"], label_visibility="collapsed")
+    imagen = st.file_uploader("Foto:", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
     if imagen:
         st.image(imagen, caption="Imagen capturada en la entrada", use_container_width=True)
 
@@ -264,40 +278,53 @@ with col2:
         if not nombre_persona.strip():
             st.markdown('<div class="status-err">⚠️ Ingresa el nombre de la persona.</div>', unsafe_allow_html=True)
         else:
-            with st.spinner("Verificando identidad..."):
-                resultado = analizar_acceso(nombre_persona, personas_auth)
-                st.session_state["resultado_ia"]  = resultado
-                st.session_state["ultimo_acceso"] = time.strftime("%H:%M:%S")
+            # Verificación directa por lista (sin IA simulada)
+            nombre_lower = nombre_persona.strip().lower()
+            autorizado = any(
+                nombre_lower in auth or auth in nombre_lower
+                for auth in personas_auth
+            )
 
-            if resultado["decision"] == "AUTORIZADO":
+            resultado = {
+                "decision":  "AUTORIZADO" if autorizado else "DENEGADO",
+                "nombre":    nombre_persona.strip(),
+            }
+            st.session_state["resultado_acceso"] = resultado
+            st.session_state["ultimo_acceso"]    = time.strftime("%H:%M:%S")
+
+            if autorizado:
                 with st.spinner("Abriendo puerta..."):
-                    ok, msg = publicar_mqtt({"acceso": "autorizado"})
+                    ok, msg = publicar_mqtt({"Act1": "acceso autorizado"})
                 if not ok:
                     st.markdown(f'<div class="status-err">⚠️ Autorizado, pero error MQTT: {msg}</div>', unsafe_allow_html=True)
             else:
                 with st.spinner("Activando alarma..."):
-                    publicar_mqtt({"alarma": 1})
-                time.sleep(2)
-                publicar_mqtt({"alarma": 0})
+                    ok, msg = publicar_mqtt({"Act1": "acceso denegado"})
+                if not ok:
+                    st.markdown(f'<div class="status-err">⚠️ Denegado, pero error MQTT: {msg}</div>', unsafe_allow_html=True)
 
-    if st.session_state["resultado_ia"]:
-        r = st.session_state["resultado_ia"]
+    # Mostrar resultado
+    if st.session_state["resultado_acceso"]:
+        r  = st.session_state["resultado_acceso"]
         ts = st.session_state["ultimo_acceso"]
         es_auth = r["decision"] == "AUTORIZADO"
-        color  = "#D8E2DC" if es_auth else "#FFCAD4"
-        border = "#9D8189" if es_auth else "#F4ACB7"
-        icono  = "✅" if es_auth else "🚫"
+        color   = "#D8E2DC" if es_auth else "#FFCAD4"
+        border  = "#9D8189" if es_auth else "#F4ACB7"
+        icono   = "✅" if es_auth else "🚫"
         st.markdown(f"""
-        <div style='background:{color};border:1px solid {border};border-left:5px solid {border};border-radius:12px;padding:20px 24px;margin-top:16px;'>
+        <div style='background:{color};border:1px solid {border};border-left:5px solid {border};
+                    border-radius:12px;padding:20px 24px;margin-top:16px;'>
             <h3 style='color:#5a4a4a;margin:0 0 8px 0;font-size:1.3rem;'>{icono} {r["decision"]}</h3>
-            <p style='color:#5a4a4a;margin:0;font-size:0.9rem;'><strong>Confianza:</strong> {r["confianza"]}%</p>
-            <p style='color:#5a4a4a;margin:6px 0 0 0;font-size:0.9rem;'><strong>Razón:</strong> {r["razon"]}</p>
+            <p style='color:#5a4a4a;margin:0;font-size:0.9rem;'>
+                <strong>Persona:</strong> {r["nombre"]}
+            </p>
             <p style='color:#9D8189;margin:8px 0 0 0;font-size:0.78rem;'>Verificado a las {ts}</p>
         </div>
         """, unsafe_allow_html=True)
+
         if es_auth:
-            st.markdown('<div class="status-ok">🚪 Puerta abierta automáticamente por 3 segundos</div>', unsafe_allow_html=True)
+            st.markdown('<div class="status-ok">🚪 Puerta abierta automáticamente por 3 segundos (ESP32)</div>', unsafe_allow_html=True)
         else:
-            st.markdown('<div class="status-err">🚨 Alarma activada — acceso denegado</div>', unsafe_allow_html=True)
+            st.markdown('<div class="status-err">🚨 Alarma activada por 2 segundos (ESP32)</div>', unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
