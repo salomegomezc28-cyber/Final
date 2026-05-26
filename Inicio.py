@@ -154,7 +154,7 @@ with st.sidebar:
     st.divider()
     st.markdown("### NAVEGACIÓN")
     st.markdown("🏠 **Panel de Control**")
-    st.markdown("📡 [Monitoreo y Acceso](Monitoreo)")
+    st.page_link("pages/Monitoreo.py", label="📡 Monitoreo y Acceso")
 
 # ── Header ────────────────────────────────────────────────────────────────────
 st.markdown("""
