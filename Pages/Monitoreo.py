@@ -101,7 +101,7 @@ def obtener_sensores() -> dict:
 
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
-            client.subscribe(TOPIC_SENSORES)
+            client.subscribe(casaIM/sensores)
             evt_conectado.set()
         else:
             error[0] = f"Broker rechazó conexión rc={rc}"
