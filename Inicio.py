@@ -154,7 +154,7 @@ with st.sidebar:
     st.divider()
     st.markdown("### NAVEGACIÓN")
     st.markdown("🏠 **Panel de Control**")
-    st.markdown("📡 [Monitoreo y Acceso](./monitoreo)")
+    st.markdown("📡 [Monitoreo y Acceso](https://finalinterfaces-monitoreo.streamlit.app/)")
 
 # ── Header ────────────────────────────────────────────────────────────────────
 st.markdown("""
