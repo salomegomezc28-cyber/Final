@@ -176,7 +176,7 @@ with st.sidebar:
     umbral_hum  = st.slider("💧 Humedad máxima (%)", 40, 100, 80)
     st.divider()
     st.markdown("### NAVEGACIÓN")
-    st.markdown("🏠 [Panel de Control](/)")
+    st.page_link("Inicio.py", label="🏠 Panel de Control")
     st.markdown("📡 **Monitoreo y Acceso**")
 
 # ── Header ────────────────────────────────────────────────────────────────────
