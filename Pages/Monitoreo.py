@@ -601,7 +601,7 @@ with col2:
     st.caption("Escribe un nombre por línea.")
     personas_texto = st.text_area(
         "Lista:",
-        value="María José\nJuan Pérez\nProfesor\nEstudiante",
+        value="Juanita Nassar\nSalome Gomez",
         height=110,
         label_visibility="collapsed",
     )
