@@ -615,7 +615,7 @@ with col2:
     st.markdown("**🪪 Nombre a verificar**")
     nombre_persona = st.text_input(
         "Nombre:",
-        placeholder="Ej: María José",
+        placeholder="Ej: Juanita",
         label_visibility="collapsed"
     )
 
